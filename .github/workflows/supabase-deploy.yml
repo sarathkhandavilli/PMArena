@@ -10,8 +10,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
-    # Environment variables required for the Supabase CLI to run non-interactively in CI
+
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
@@ -24,9 +23,35 @@ jobs:
         with:
           version: latest
 
+      # 🔑 Set env dynamically based on branch
+      - name: Set environment variables
+        run: |
+          BRANCH="${GITHUB_REF##*/}"
+
+          echo "Running on branch: $BRANCH"
+
+          if [[ "$BRANCH" == "development" ]]; then
+            echo "ENV_NAME=development" >> $GITHUB_ENV
+            echo "PROJECT_REF=${{ secrets.SUPABASE_DEV_PROJECT_REF }}" >> $GITHUB_ENV
+            echo "DB_PASSWORD=${{ secrets.SUPABASE_DB_PASSWORD }}" >> $GITHUB_ENV
+
+          elif [[ "$BRANCH" == "staging" ]]; then
+            echo "ENV_NAME=staging" >> $GITHUB_ENV
+            echo "PROJECT_REF=${{ secrets.SUPABASE_STAGING_PROJECT_REF }}" >> $GITHUB_ENV
+            echo "DB_PASSWORD=${{ secrets.SUPABASE_DB_PASSWORD }}" >> $GITHUB_ENV
+
+          elif [[ "$BRANCH" == "main" ]]; then
+            echo "ENV_NAME=production" >> $GITHUB_ENV
+            echo "PROJECT_REF=${{ secrets.SUPABASE_PROD_PROJECT_REF }}" >> $GITHUB_ENV
+            echo "DB_PASSWORD=${{ secrets.SUPABASE_DB_PASSWORD }}" >> $GITHUB_ENV
+
+          else
+            echo "Unknown branch. Exiting."
+            exit 1
+          fi
+
       - name: Link Supabase project
-        # Using --password to prevent the CLI from prompting for a password in CI
-        run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }} --password ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: supabase link --project-ref $PROJECT_REF --password $DB_PASSWORD
 
       - name: Push database changes
         run: supabase db push
@@ -36,5 +61,5 @@ jobs:
           if [ -d "supabase/functions" ] && [ "$(ls -A supabase/functions)" ]; then
             supabase functions deploy --no-verify-jwt
           else
-            echo "No functions found in supabase/functions. Skipping deployment."
+            echo "No functions found. Skipping deployment."
           fi
