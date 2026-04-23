@@ -50,12 +50,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // 2. React to user changes and fetch profile
   useEffect(() => {
+    const userId = user?.id;
     const fetchProfile = async () => {
-      console.log("AuthContext: user changed, user =", user?.id);
-      if (user) {
+      console.log("AuthContext: user changed, userId =", userId);
+      if (userId) {
         setLoading(true);
-        console.log("AuthContext: fetching profile for user", user.id);
-        const userProfile = await getCurrentUserProfile(user.id);
+        console.log("AuthContext: fetching profile for user", userId);
+        const userProfile = await getCurrentUserProfile(userId);
         console.log("AuthContext: fetched profile:", userProfile);
         setProfile(userProfile);
         setLoading(false);
@@ -66,7 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     fetchProfile();
-  }, [user]);
+  }, [user?.id]);
 
   return (
     <AuthContext.Provider value={{ user, session, profile, loading }}>

@@ -5,12 +5,23 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute, AdminRoute, SuperAdminRoute, EmployeeRoute } from "./components/auth/ProtectedRoute";
+import AppShell from "./components/layout/AppShell";
 
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AuthPage from "./pages/auth/AuthPage";
-import AdminDashboard from "./pages/admin/Dashboard";
-import SuperAdminDashboard from "./pages/superadmin/Dashboard";
+
+// Admin pages
+import AdminHome from "./pages/admin/Dashboard";
+import ProblemsPage from "./pages/admin/Problems";
+import ImportsPage from "./pages/admin/Imports";
+
+// Super Admin pages
+import SuperAdminHome from "./pages/superadmin/Dashboard";
+import TenantsPage from "./pages/superadmin/Tenants";
+import AdminsPage from "./pages/superadmin/Admins";
+
+// Employee
 import EmployeeDashboard from "./pages/employee/Dashboard";
 
 const queryClient = new QueryClient();
@@ -24,26 +35,31 @@ const App = () => (
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/" element={<Index />} />
-
-            {/* Unified Auth Route */}
             <Route path="/auth" element={<AuthPage />} />
 
-            {/* Protected Employee Routes */}
+            {/* Employee */}
             <Route element={<EmployeeRoute />}>
               <Route path="/dashboard" element={<EmployeeDashboard />} />
             </Route>
 
-            {/* Protected Admin Routes */}
+            {/* Admin – wrapped in AppShell */}
             <Route element={<AdminRoute />}>
-              <Route path="/admin" element={<AdminDashboard />} />
+              <Route element={<AppShell />}>
+                <Route path="/admin" element={<AdminHome />} />
+                <Route path="/admin/problems" element={<ProblemsPage />} />
+                <Route path="/admin/imports" element={<ImportsPage />} />
+              </Route>
             </Route>
 
-            {/* Protected Super Admin Routes */}
+            {/* Super Admin – wrapped in AppShell */}
             <Route element={<SuperAdminRoute />}>
-              <Route path="/super-admin" element={<SuperAdminDashboard />} />
+              <Route element={<AppShell />}>
+                <Route path="/super-admin" element={<SuperAdminHome />} />
+                <Route path="/super-admin/tenants" element={<TenantsPage />} />
+                <Route path="/super-admin/admins" element={<AdminsPage />} />
+              </Route>
             </Route>
 
-            {/* Catch-All */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
