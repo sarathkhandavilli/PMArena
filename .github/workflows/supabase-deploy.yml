@@ -1,0 +1,33 @@
+name: Supabase Deploy
+
+on:
+  push:
+    branches:
+      - development
+      - staging
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    # Environment variables required for the Supabase CLI to run non-interactively in CI
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        run: npm install -g supabase
+
+      - name: Link Supabase project
+        # Using --password to prevent the CLI from prompting for a password in CI
+        run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }} --password ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - name: Push database changes
+        run: supabase db push
+
+      - name: Deploy functions (if any)
+        run: supabase functions deploy --no-verify-jwt
