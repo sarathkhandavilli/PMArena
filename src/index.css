@@ -1,0 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 228 14% 8%;
+    --foreground: 220 20% 92%;
+
+    --card: 228 12% 11%;
+    --card-foreground: 220 20% 92%;
+
+    --popover: 228 12% 11%;
+    --popover-foreground: 220 20% 92%;
+
+    --primary: 228 100% 66%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 228 10% 16%;
+    --secondary-foreground: 220 20% 80%;
+
+    --muted: 228 10% 14%;
+    --muted-foreground: 220 10% 50%;
+
+    --accent: 228 12% 18%;
+    --accent-foreground: 220 20% 92%;
+
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 228 10% 18%;
+    --input: 228 10% 16%;
+    --ring: 228 100% 66%;
+
+    --radius: 0.5rem;
+
+    /* Severity colors */
+    --severity-critical: 0 72% 55%;
+    --severity-medium: 30 90% 55%;
+    --severity-low: 142 60% 45%;
+
+    /* Signal tag colors */
+    --signal-ux: 280 70% 60%;
+    --signal-performance: 200 80% 55%;
+    --signal-dropoff: 350 75% 55%;
+    --signal-pricing: 45 90% 50%;
+    --signal-trust: 170 60% 45%;
+
+    /* Sidebar */
+    --sidebar-background: 228 14% 6%;
+    --sidebar-foreground: 220 20% 80%;
+    --sidebar-primary: 228 100% 66%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 228 12% 14%;
+    --sidebar-accent-foreground: 220 20% 92%;
+    --sidebar-border: 228 10% 15%;
+    --sidebar-ring: 228 100% 66%;
+
+    /* Fonts */
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-sans);
+    @apply font-semibold tracking-tight;
+  }
+
+  code, pre, .font-mono {
+    font-family: var(--font-mono);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
