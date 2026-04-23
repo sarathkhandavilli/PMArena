@@ -32,4 +32,9 @@ jobs:
         run: supabase db push
 
       - name: Deploy functions (if any)
-        run: supabase functions deploy --no-verify-jwt
+        run: |
+          if [ -d "supabase/functions" ] && [ "$(ls -A supabase/functions)" ]; then
+            supabase functions deploy --no-verify-jwt
+          else
+            echo "No functions found in supabase/functions. Skipping deployment."
+          fi
