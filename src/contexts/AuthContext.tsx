@@ -18,56 +18,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 1. Initialize and listen to session/user changes (purely auth state)
+  // 🔥 SINGLE SOURCE OF TRUTH
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user ?? null);
-      } catch (error) {
-        console.error('Error initializing auth:', error);
+    let isMounted = true;
+
+    const handleSession = async (session: Session | null) => {
+      if (!isMounted) return;
+
+      setLoading(true);
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        try {
+          const profileData = await getCurrentUserProfile(session.user.id);
+          if (isMounted) {
+            setProfile(profileData);
+          }
+        } catch (err) {
+          console.error('Profile fetch error:', err);
+          if (isMounted) setProfile(null);
+        }
+      } else {
+        setProfile(null);
       }
+
+      if (isMounted) setLoading(false);
     };
 
-    initializeAuth();
+    // ✅ Initial session load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleSession(session);
+    });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        // Synchronously set loading to true before setting user, so dependents don't check profile too early
-        if (session?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-          setLoading(true);
-        }
-        setSession(session);
-        setUser(session?.user ?? null);
+    // ✅ Auth listener
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        handleSession(session);
       }
     );
 
     return () => {
-      authListener.subscription.unsubscribe();
+      isMounted = false;
+      listener.subscription.unsubscribe();
     };
   }, []);
-
-  // 2. React to user changes and fetch profile
-  useEffect(() => {
-    const userId = user?.id;
-    const fetchProfile = async () => {
-      console.log("AuthContext: user changed, userId =", userId);
-      if (userId) {
-        setLoading(true);
-        console.log("AuthContext: fetching profile for user", userId);
-        const userProfile = await getCurrentUserProfile(userId);
-        console.log("AuthContext: fetched profile:", userProfile);
-        setProfile(userProfile);
-        setLoading(false);
-      } else {
-        setProfile(null);
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, [user?.id]);
 
   return (
     <AuthContext.Provider value={{ user, session, profile, loading }}>
