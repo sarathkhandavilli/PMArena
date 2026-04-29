@@ -18,7 +18,7 @@ interface ImportLog {
 const STATUS_COLOR: Record<string, { bg: string; color: string; border: string }> = {
   success: { bg: 'rgba(0,194,154,0.12)', color: '#00C29A', border: 'rgba(0,194,154,0.2)' },
   partial: { bg: 'rgba(245,158,11,0.12)', color: '#FCD34D', border: 'rgba(245,158,11,0.2)' },
-  failed:  { bg: 'rgba(239,68,68,0.1)',   color: '#F87171', border: 'rgba(239,68,68,0.2)' },
+  failed: { bg: 'rgba(239,68,68,0.1)', color: '#F87171', border: 'rgba(239,68,68,0.2)' },
 };
 
 export default function ImportsPage() {
@@ -31,7 +31,7 @@ export default function ImportsPage() {
 
   const loadLogs = async () => {
     setLoading(true);
-    const { data } = await supabase.from('import_logs').select('*').order('created_at', { ascending: false });
+    const { data } = await supabase.from('imports').select('*').order('created_at', { ascending: false });
     setLogs(data ?? []);
     setLoading(false);
   };
@@ -86,7 +86,7 @@ export default function ImportsPage() {
     }
 
     // Log the import
-    await supabase.from('import_logs').insert({
+    await supabase.from('imports').insert({
       file_name: file.name,
       rows_processed: rowsProcessed,
       status,
@@ -111,24 +111,30 @@ export default function ImportsPage() {
   };
 
   const columns = [
-    { key: 'file_name', label: 'File Name', render: (row: ImportLog) => (
-      <div className="flex items-center gap-2">
-        <FileSpreadsheet size={15} style={{ color: '#00C29A' }} />
-        <span className="font-medium text-white">{row.file_name}</span>
-      </div>
-    )},
+    {
+      key: 'file_name', label: 'File Name', render: (row: ImportLog) => (
+        <div className="flex items-center gap-2">
+          <FileSpreadsheet size={15} style={{ color: '#00C29A' }} />
+          <span className="font-medium text-white">{row.file_name}</span>
+        </div>
+      )
+    },
     { key: 'rows_processed', label: 'Rows', render: (row: ImportLog) => <span className="text-white/70">{row.rows_processed}</span> },
-    { key: 'status', label: 'Status', render: (row: ImportLog) => {
-      const c = STATUS_COLOR[row.status] ?? STATUS_COLOR.partial;
-      return (
-        <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: c.bg, color: c.color, border: `1px solid ${c.border}` }}>
-          {row.status}
-        </span>
-      );
-    }},
-    { key: 'created_at', label: 'Uploaded At', render: (row: ImportLog) => (
-      <span className="text-white/40 text-xs">{new Date(row.created_at).toLocaleString()}</span>
-    )},
+    {
+      key: 'status', label: 'Status', render: (row: ImportLog) => {
+        const c = STATUS_COLOR[row.status] ?? STATUS_COLOR.partial;
+        return (
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: c.bg, color: c.color, border: `1px solid ${c.border}` }}>
+            {row.status}
+          </span>
+        );
+      }
+    },
+    {
+      key: 'created_at', label: 'Uploaded At', render: (row: ImportLog) => (
+        <span className="text-white/40 text-xs">{new Date(row.created_at).toLocaleString()}</span>
+      )
+    },
   ];
 
   return (

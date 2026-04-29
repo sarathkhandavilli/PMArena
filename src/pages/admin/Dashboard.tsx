@@ -13,7 +13,7 @@ export default function AdminHome() {
       setLoading(true);
       const [{ count: problems }, { count: imports }, { count: users }] = await Promise.all([
         supabase.from('problems').select('*', { count: 'exact', head: true }),
-        supabase.from('import_logs').select('*', { count: 'exact', head: true }),
+        supabase.from('imports').select('*', { count: 'exact', head: true }),
         supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'EMPLOYEE'),
       ]);
       setStats({ problems: problems ?? 0, imports: imports ?? 0, users: users ?? 0 });
