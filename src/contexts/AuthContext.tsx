@@ -8,6 +8,7 @@ interface AuthContextType {
   session: Session | null;
   profile: UserProfile | null;
   loading: boolean;
+  isFetchingProfile: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,6 +18,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isFetchingProfile, setIsFetchingProfile] = useState(false);
   const isInitialized = useRef(false)
 
   // 🔥 SINGLE SOURCE OF TRUTH
@@ -31,6 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
 
       if (session?.user) {
+        setIsFetchingProfile(true);
         try {
           const profileData = await getCurrentUserProfile(session.user.id);
           if (isMounted) {
@@ -39,9 +42,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } catch (err) {
           console.error('Profile fetch error:', err);
           if (isMounted) setProfile(null);
+        } finally {
+          if (isMounted) setIsFetchingProfile(false);
         }
       } else {
         setProfile(null);
+        setIsFetchingProfile(false);
       }
 
       if (isMounted && isInitial) setLoading(false);
@@ -69,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, isFetchingProfile }}>
       {children}
     </AuthContext.Provider>
   );

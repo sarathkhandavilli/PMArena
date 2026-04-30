@@ -35,22 +35,23 @@ export default function AuthPage() {
   const [fetchingTenants, setFetchingTenants] = useState(true);
 
   const navigate = useNavigate();
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, isFetchingProfile } = useAuth();
 
   // Redirect if already logged in
   useEffect(() => {
-    if (!authLoading) {
-      if (user && profile) {
-        if (profile.role === 'SUPER_ADMIN') navigate('/super-admin');
-        else if (profile.role === 'ADMIN') navigate('/admin');
-        else if (profile.role === 'EMPLOYEE') navigate('/dashboard');
-      } else if (user && !profile) {
-        toast.error('Account profile missing or inactive. Please contact support.');
-        supabase.auth.signOut();
-        setIsLoggingIn(false);
-      }
+    // If it's performing the initial session load or fetching a profile, wait.
+    if (authLoading || isFetchingProfile) return;
+
+    if (user && profile) {
+      if (profile.role === 'SUPER_ADMIN') navigate('/super-admin');
+      else if (profile.role === 'ADMIN') navigate('/admin');
+      else if (profile.role === 'EMPLOYEE') navigate('/dashboard');
+    } else if (user && !profile) {
+      toast.error('Account profile missing or inactive. Please contact support.');
+      supabase.auth.signOut();
+      setIsLoggingIn(false);
     }
-  }, [user, profile, authLoading, navigate]);
+  }, [user, profile, authLoading, isFetchingProfile, navigate]);
 
   // Fetch tenants
   useEffect(() => {
