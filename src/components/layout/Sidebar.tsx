@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import {
   LayoutDashboard, Building2, Users, LogOut,
   ChevronLeft, ChevronRight, Zap, BookOpen,
-  Upload, Menu, X,
+  Upload, Menu, X, LayoutGrid,
 } from 'lucide-react';
 
 interface NavItem {
@@ -103,26 +103,61 @@ export default function Sidebar() {
       )}
 
       {/* Nav */}
-      <nav className="flex-1 px-2 py-3 space-y-0.5">
-        {navItems.map((item) => {
-          const active = isActive(item.href);
-          return (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150"
-              style={{
-                color: active ? '#ffffff' : 'rgba(255,255,255,0.45)',
-                background: active ? 'rgba(37,99,235,0.18)' : 'transparent',
-                borderLeft: active ? '2px solid #00C29A' : '2px solid transparent',
-              }}
-            >
-              <span style={{ color: active ? '#00C29A' : 'inherit' }}>{item.icon}</span>
-              {!collapsed && <span>{item.label}</span>}
-            </NavLink>
-          );
-        })}
+      <nav className="flex-1 px-2 py-3 space-y-6 overflow-y-auto">
+        
+        {/* PUBLIC SECTION */}
+        <div className="space-y-0.5">
+          {!collapsed && (
+            <div className="px-3 mb-2">
+              <span className="text-[10px] font-bold tracking-wider text-white/30 uppercase">Public</span>
+            </div>
+          )}
+          <NavLink
+            to="/"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150"
+            style={{
+              color: location.pathname === '/' ? '#ffffff' : 'rgba(255,255,255,0.45)',
+              background: location.pathname === '/' ? 'rgba(37,99,235,0.18)' : 'transparent',
+              borderLeft: location.pathname === '/' ? '2px solid #00C29A' : '2px solid transparent',
+            }}
+          >
+            <span style={{ color: location.pathname === '/' ? '#00C29A' : 'inherit' }}>
+              <LayoutGrid size={18} />
+            </span>
+            {!collapsed && <span>Browse All Problems</span>}
+          </NavLink>
+        </div>
+
+        {/* ROLE SECTION */}
+        <div className="space-y-0.5">
+          {!collapsed && (
+            <div className="px-3 mb-2">
+              <span className="text-[10px] font-bold tracking-wider text-white/30 uppercase">
+                {profile?.role?.replace('_', ' ')}
+              </span>
+            </div>
+          )}
+          {navItems.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <NavLink
+                key={item.href}
+                to={item.href}
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150"
+                style={{
+                  color: active ? '#ffffff' : 'rgba(255,255,255,0.45)',
+                  background: active ? 'rgba(37,99,235,0.18)' : 'transparent',
+                  borderLeft: active ? '2px solid #00C29A' : '2px solid transparent',
+                }}
+              >
+                <span style={{ color: active ? '#00C29A' : 'inherit' }}>{item.icon}</span>
+                {!collapsed && <span>{item.label}</span>}
+              </NavLink>
+            );
+          })}
+        </div>
       </nav>
 
       {/* User + Logout */}
