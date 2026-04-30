@@ -7,7 +7,15 @@ import {
   LayoutDashboard, Building2, Users, LogOut,
   ChevronLeft, ChevronRight, Zap, BookOpen,
   Upload, Menu, X, LayoutGrid,
+  Sparkles, User, Settings, HelpCircle, ChevronsUpDown, Palette
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface NavItem {
   label: string;
@@ -104,7 +112,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-2 py-3 space-y-6 overflow-y-auto">
-        
+
         {/* PUBLIC SECTION */}
         <div className="space-y-0.5">
           {!collapsed && (
@@ -160,24 +168,38 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      {/* User + Logout */}
-      <div className="px-2 pb-4 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '12px' }}>
-        {!collapsed && (
-          <div className="px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}>
-            <p className="text-white text-xs font-semibold truncate">{profile?.name || profile?.email}</p>
-            <p className="text-white/40 text-xs truncate">{profile?.email}</p>
-          </div>
-        )}
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"
-          style={{ color: 'rgba(255,255,255,0.4)' }}
-          onMouseEnter={e => (e.currentTarget.style.color = '#ff6b6b')}
-          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}
-        >
-          <LogOut size={18} />
-          {!collapsed && <span>Sign out</span>}
-        </button>
+      {/* User Dropdown */}
+      <div className="px-2 pb-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '12px' }}>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="w-full flex items-center gap-2 px-2 py-2 rounded-lg transition-all hover:bg-white/5 outline-none">
+            <div className="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center shrink-0 font-semibold text-xs border border-white/10">
+              {profile?.name?.substring(0, 2).toUpperCase() || profile?.email?.substring(0, 2).toUpperCase() || 'U'}
+            </div>
+            {!collapsed && (
+              <>
+                <div className="flex-1 text-left overflow-hidden">
+                  <p className="text-white text-xs font-semibold truncate">{profile?.name || profile?.email}</p>
+                </div>
+                <ChevronsUpDown size={14} className="text-white/40 shrink-0" />
+              </>
+            )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" side={collapsed ? "right" : "bottom"} sideOffset={8} className="w-56 bg-card border-border shadow-lg">
+            <div className="px-2 py-2 mb-1 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 font-semibold text-xs border border-primary/20">
+                {profile?.name?.substring(0, 2).toUpperCase() || profile?.email?.substring(0, 2).toUpperCase() || 'U'}
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <p className="text-sm font-medium text-foreground truncate">{profile?.name || profile?.email}</p>
+                <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
+              </div>
+            </div>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer gap-2 py-2 text-red-500 focus:text-red-500 focus:bg-red-500/10">
+              <LogOut size={15} /> Log out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

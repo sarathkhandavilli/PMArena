@@ -10,6 +10,12 @@ export default function AdminHome() {
 
   useEffect(() => {
     const fetchStats = async () => {
+      const res = await supabase
+        .from('users')
+        .select('*', { count: 'exact' })
+        .eq('role', 'SUPER_ADMIN');
+
+      console.log(res);
       setLoading(true);
       const [{ count: problems }, { count: imports }, { count: users }] = await Promise.all([
         supabase.from('problems').select('*', { count: 'exact', head: true }),
