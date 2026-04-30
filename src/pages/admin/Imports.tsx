@@ -62,11 +62,12 @@ export default function ImportsPage() {
         title: row['title'] || row['Title'] || '',
         company: row['company'] || row['Company'] || '',
         signal: row['signal'] || row['Signal'] || '',
-        difficulty: row['difficulty'] || row['Difficulty'] || '',
+        severity: (row['severity'] || row['Severity']) ? parseInt(String(row['severity'] || row['Severity']), 10) : null,
         department: row['department'] || row['Department'] || '',
         industry: row['industry'] || row['Industry'] || '',
         sub_industry: row['sub_industry'] || row['SubIndustry'] || row['Sub Industry'] || '',
-        description: row['description'] || row['Description'] || '',
+        user_comment: row['user_comment'] || row['UserComment'] || row['User Comment'] || '',
+        problem_statement: row['problem_statement'] || row['ProblemStatement'] || row['Problem Statement'] || '',
       })).filter(p => p.title);
 
       if (problems.length === 0) {
@@ -183,7 +184,7 @@ export default function ImportsPage() {
       {/* Format hint */}
       <div className="rounded-xl p-4" style={{ background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.15)' }}>
         <p className="text-blue-300 text-xs font-semibold mb-1">📋 Expected columns</p>
-        <p className="text-blue-300/60 text-xs font-mono">title, company, signal, difficulty, department, industry, sub_industry, description</p>
+        <p className="text-blue-300/60 text-xs font-mono">title, company, signal, severity, department, industry, sub_industry, user_comment, problem_statement</p>
       </div>
 
       {/* History */}

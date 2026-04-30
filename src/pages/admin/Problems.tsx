@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import DataTable from '@/components/ui/DataTable';
 import { Search, Filter } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Problem {
   id: string;
   title: string;
   company: string;
   signal: string;
-  difficulty: string;
+  severity: number;
   department: string;
   industry: string;
 }
@@ -22,6 +23,13 @@ const BADGE = (label: string, color: string) => (
 const DIFFICULTY_COLOR: Record<string, string> = {
   Easy: '#00C29A', Medium: '#F59E0B', Hard: '#EF4444',
 };
+
+function getDifficultyLabel(severity: number): "Easy" | "Medium" | "Hard" {
+  if (!severity) return "Medium";
+  if (severity <= 2) return "Easy";
+  if (severity === 3) return "Medium";
+  return "Hard";
+}
 
 const INPUT_STYLE = {
   padding: '9px 12px', borderRadius: '8px',
@@ -58,19 +66,21 @@ export default function ProblemsPage() {
     const matchIndustry = !filters.industry || p.industry === filters.industry;
     const matchCompany = !filters.company || p.company === filters.company;
     const matchSignal = !filters.signal || p.signal === filters.signal;
-    const matchDiff = !filters.difficulty || p.difficulty === filters.difficulty;
-    return matchSearch && matchIndustry && matchCompany && matchSignal && matchDiff;
+    const matchDifficulty = !filters.difficulty || filters.difficulty === "all" || getDifficultyLabel(p.severity) === filters.difficulty;
+    return matchSearch && matchIndustry && matchCompany && matchSignal && matchDifficulty;
   });
 
   const columns = [
     { key: 'title', label: 'Title', render: (row: Problem) => <span className="font-medium text-white line-clamp-1">{row.title}</span> },
     { key: 'company', label: 'Company', render: (row: Problem) => <span className="text-white/60">{row.company || '—'}</span> },
     { key: 'signal', label: 'Signal', render: (row: Problem) => row.signal ? BADGE(row.signal, '#A78BFA') : <span className="text-white/30">—</span> },
-    { key: 'difficulty', label: 'Difficulty', render: (row: Problem) => row.difficulty ? BADGE(row.difficulty, DIFFICULTY_COLOR[row.difficulty] ?? '#60A5FA') : <span className="text-white/30">—</span> },
+    { key: 'severity', label: 'Difficulty', render: (row: Problem) => {
+        const diff = getDifficultyLabel(row.severity);
+        return row.severity ? BADGE(diff, DIFFICULTY_COLOR[diff] ?? '#60A5FA') : <span className="text-white/30">—</span>;
+      }
+    },
     { key: 'department', label: 'Dept', render: (row: Problem) => <span className="text-white/50 text-xs">{row.department || '—'}</span> },
   ];
-
-  const SELECT_STYLE = { ...INPUT_STYLE, paddingRight: '32px', appearance: 'none' as const, cursor: 'pointer' };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -101,15 +111,19 @@ export default function ProblemsPage() {
           { label: 'Signal', key: 'signal', options: signals },
           { label: 'Difficulty', key: 'difficulty', options: ['Easy', 'Medium', 'Hard'] },
         ].map(f => (
-          <select
+          <Select
             key={f.key}
-            value={filters[f.key as keyof typeof filters]}
-            onChange={e => setFilters(ff => ({ ...ff, [f.key]: e.target.value }))}
-            style={SELECT_STYLE}
+            value={filters[f.key as keyof typeof filters] || "all"}
+            onValueChange={v => setFilters(ff => ({ ...ff, [f.key]: v === "all" ? "" : v }))}
           >
-            <option value="">{f.label}</option>
-            {f.options.map(o => <option key={o} value={o}>{o}</option>)}
-          </select>
+            <SelectTrigger className="w-[140px] h-[36px] bg-white/5 border-white/10 text-white font-normal">
+              <SelectValue placeholder={f.label} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{f.label}</SelectItem>
+              {f.options.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+            </SelectContent>
+          </Select>
         ))}
 
         {Object.values(filters).some(Boolean) && (
