@@ -10,6 +10,7 @@ import AppShell from "./components/layout/AppShell";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AuthPage from "./pages/auth/AuthPage";
+import ProblemPage from "./pages/ProblemPage";
 
 // Admin pages
 import AdminHome from "./pages/admin/Dashboard";
@@ -35,6 +36,7 @@ const App = () => (
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/problem/:slug" element={<ProblemPage />} />
             <Route path="/auth" element={<AuthPage />} />
 
             {/* Employee */}

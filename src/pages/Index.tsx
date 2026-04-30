@@ -1,61 +1,58 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import ProblemDetail from "@/components/ProblemDetail";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
 import { Building2 } from "lucide-react";
+import { generateSlug } from "./ProblemPage";
 
-// DB-aligned Problem type
 export interface DbProblem {
   id: string;
   title: string;
   company: string;
   signal: string;
-  difficulty: string;
+  severity: number;
   industry: string;
   sub_industry: string;
-  description: string;
+  problem_statement: string;
   department: string;
+}
+
+function getDifficultyLabel(severity: number): "Easy" | "Medium" | "Hard" {
+  if (!severity) return "Medium";
+  if (severity <= 2) return "Easy";
+  if (severity === 3) return "Medium";
+  return "Hard";
 }
 
 // Adapter so ProblemDetail still works with its existing interface
 export function dbToLegacy(p: DbProblem) {
+  const diff = getDifficultyLabel(p.severity);
+  const sevMap = { Easy: "low", Medium: "medium", Hard: "critical" } as const;
   return {
     id: p.id,
     title: p.title,
     company: p.company,
     signal: (p.signal ?? "UX Friction") as any,
-    severity: difficultyToSeverity(p.difficulty),
+    severity: sevMap[diff],
     industry: p.industry ?? "",
     subIndustry: p.sub_industry ?? "",
-    problem_statement: p.description ?? "",
+    problem_statement: p.problem_statement ?? "",
     user_comment: "",
     source: p.department ?? "",
   };
 }
 
-function difficultyToSeverity(d: string): "critical" | "medium" | "low" {
-  const v = (d ?? "").toLowerCase();
-  if (v === "hard" || v === "critical") return "critical";
-  if (v === "easy" || v === "low") return "low";
-  return "medium";
-}
-
-const DIFFICULTY_LABEL: Record<string, string> = {
-  hard: "Hard", critical: "Hard",
-  medium: "Medium",
-  easy: "Easy", low: "Easy",
-};
-
 const DIFFICULTY_COLOR: Record<string, string> = {
-  hard: "#ef4444", critical: "#ef4444",
-  medium: "#f59e0b",
-  easy: "#22c55e", low: "#22c55e",
+  Hard: "#ef4444",
+  Medium: "#f59e0b",
+  Easy: "#22c55e",
 };
 
 const Index = () => {
+  const navigate = useNavigate();
   const [problems, setProblems] = useState<DbProblem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProblem, setSelectedProblem] = useState<DbProblem | null>(null);
 
   // Filters
   const [industry, setIndustry] = useState("");
@@ -87,32 +84,18 @@ const Index = () => {
       if (industry && p.industry !== industry) return false;
       if (company && p.company !== company) return false;
       if (signal && p.signal !== signal) return false;
-      if (difficulty && difficultyToSeverity(p.difficulty) !== difficulty) return false;
+      if (difficulty && difficulty !== "all" && getDifficultyLabel(p.severity) !== difficulty) return false;
       if (search) {
         const q = search.toLowerCase();
         if (
           !p.title?.toLowerCase().includes(q) &&
           !p.company?.toLowerCase().includes(q) &&
-          !p.description?.toLowerCase().includes(q)
+          !p.problem_statement?.toLowerCase().includes(q)
         ) return false;
       }
       return true;
     });
   }, [problems, industry, company, signal, difficulty, search]);
-
-  const selectClass = "h-8 px-3 rounded-md bg-muted border border-border text-sm text-foreground appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring";
-
-  if (selectedProblem) {
-    return (
-      <div className="h-screen flex flex-col bg-background">
-        <Navbar />
-        <ProblemDetail
-          problem={dbToLegacy(selectedProblem) as any}
-          onBack={() => setSelectedProblem(null)}
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -130,27 +113,47 @@ const Index = () => {
               className="h-8 w-56 px-3 rounded-md bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             />
 
-            <select value={industry} onChange={e => setIndustry(e.target.value)} className={selectClass}>
-              <option value="">Industry</option>
-              {industries.map(i => <option key={i} value={i}>{i}</option>)}
-            </select>
+            <Select value={industry} onValueChange={(v) => setIndustry(v === "all" ? "" : v)}>
+              <SelectTrigger className="w-36 h-8 bg-muted border-border">
+                <SelectValue placeholder="Industry" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Industries</SelectItem>
+                {industries.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+              </SelectContent>
+            </Select>
 
-            <select value={company} onChange={e => setCompany(e.target.value)} className={selectClass}>
-              <option value="">Company</option>
-              {companies.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
+            <Select value={company} onValueChange={(v) => setCompany(v === "all" ? "" : v)}>
+              <SelectTrigger className="w-36 h-8 bg-muted border-border">
+                <SelectValue placeholder="Company" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Companies</SelectItem>
+                {companies.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
 
-            <select value={signal} onChange={e => setSignal(e.target.value)} className={selectClass}>
-              <option value="">Signal</option>
-              {signals.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <Select value={signal} onValueChange={(v) => setSignal(v === "all" ? "" : v)}>
+              <SelectTrigger className="w-36 h-8 bg-muted border-border">
+                <SelectValue placeholder="Signal" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Signals</SelectItem>
+                {signals.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
 
-            <select value={difficulty} onChange={e => setDifficulty(e.target.value)} className={selectClass}>
-              <option value="">Difficulty</option>
-              <option value="critical">Hard</option>
-              <option value="medium">Medium</option>
-              <option value="low">Easy</option>
-            </select>
+            <Select value={difficulty || "all"} onValueChange={(v) => setDifficulty(v === "all" ? "" : v)}>
+              <SelectTrigger className="w-36 h-8 bg-muted border-border">
+                <SelectValue placeholder="Difficulty" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Difficulties</SelectItem>
+                <SelectItem value="Hard">Hard</SelectItem>
+                <SelectItem value="Medium">Medium</SelectItem>
+                <SelectItem value="Easy">Easy</SelectItem>
+              </SelectContent>
+            </Select>
 
             {(industry || company || signal || difficulty || search) && (
               <button
@@ -196,18 +199,17 @@ const Index = () => {
               </thead>
               <tbody>
                 {filtered.map((problem, i) => {
-                  const sev = difficultyToSeverity(problem.difficulty);
-                  const diffLabel = DIFFICULTY_LABEL[(problem.difficulty ?? "").toLowerCase()] ?? "Medium";
-                  const diffColor = DIFFICULTY_COLOR[(problem.difficulty ?? "").toLowerCase()] ?? "#f59e0b";
+                  const diffLabel = getDifficultyLabel(problem.severity);
+                  const diffColor = DIFFICULTY_COLOR[diffLabel] ?? "#f59e0b";
                   return (
                     <tr
                       key={problem.id}
-                      onClick={() => setSelectedProblem(problem)}
+                      onClick={() => navigate(`/problem/${generateSlug(problem.title)}`, { state: { problem } })}
                       className="border-b border-border/50 hover:bg-accent/50 cursor-pointer transition-colors group"
                     >
                       <td className="px-6 py-3 text-xs text-muted-foreground font-mono">{i + 1}</td>
                       <td className="px-3 py-3">
-                        <span className="text-sm text-foreground group-hover:text-primary transition-colors">
+                        <span className="text-sm text-foreground transition-colors">
                           {problem.title}
                         </span>
                       </td>
