@@ -299,10 +299,10 @@ export default function AuthPage() {
 
           {/* ── REGISTER FORM ── */}
           {activeTab === 'register' && (
-            <form onSubmit={handleSignup} className="space-y-4">
+            <form onSubmit={handleSignup}>
 
               {/* Info banner */}
-              <div className="flex items-start gap-3 p-3 rounded-lg" style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
+              <div className="flex items-start gap-3 p-3 -mt-2 rounded-lg" style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
                 <AlertCircle size={16} className="text-amber-500 mt-0.5 shrink-0" />
                 <p className="text-xs text-amber-800">
                   <strong>Employee registration only.</strong> Admins and Super Admins are pre-created and can only login.
@@ -310,7 +310,7 @@ export default function AuthPage() {
               </div>
 
               {/* Full name */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 mt-2">
                 <label className="text-sm font-medium text-gray-700">Full name</label>
                 <div className="relative">
                   <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
