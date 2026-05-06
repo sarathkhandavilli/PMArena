@@ -32,6 +32,8 @@ const ProblemDetail = ({ problem, onBack }: ProblemDetailProps) => {
     experiment: "",
   });
 
+  console.log(problem)
+
   const diff = difficultyConfig[problem.severity];
 
   const handleSubmit = () => {
@@ -72,22 +74,20 @@ const ProblemDetail = ({ problem, onBack }: ProblemDetailProps) => {
           </button>
           <button
             onClick={() => setActiveLeftTab("description")}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              activeLeftTab === "description"
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeLeftTab === "description"
                 ? "bg-accent text-foreground"
                 : "text-muted-foreground hover:text-foreground"
-            }`}
+              }`}
           >
             <FileText className="w-3.5 h-3.5 inline mr-1.5" />
             Description
           </button>
           <button
             onClick={() => setActiveLeftTab("discussion")}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              activeLeftTab === "discussion"
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${activeLeftTab === "discussion"
                 ? "bg-accent text-foreground"
                 : "text-muted-foreground hover:text-foreground"
-            }`}
+              }`}
           >
             <MessageSquare className="w-3.5 h-3.5 inline mr-1.5" />
             Discussion

@@ -16,6 +16,7 @@ export interface DbProblem {
   sub_industry: string;
   problem_statement: string;
   department: string;
+  user_comment: string;
 }
 
 function getDifficultyLabel(severity: number): "Easy" | "Medium" | "Hard" {
@@ -38,7 +39,7 @@ export function dbToLegacy(p: DbProblem) {
     industry: p.industry ?? "",
     subIndustry: p.sub_industry ?? "",
     problem_statement: p.problem_statement ?? "",
-    user_comment: "",
+    user_comment: p.user_comment ?? "",
     source: p.department ?? "",
   };
 }
