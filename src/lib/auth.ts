@@ -17,6 +17,7 @@ export const signUpEmployee = async (
   name: string,
   tenantId: string
 ) => {
+
   // 1. Check tenant limit
   const { data: tenant, error: tenantError } = await supabase
     .from('tenants')
@@ -25,7 +26,7 @@ export const signUpEmployee = async (
     .single();
 
   if (tenantError) {
-    throw new Error('Failed to fetch tenant information. Please try again.');
+    throw new Error('Failed to fetch tenant information.');
   }
 
   if (!tenant) {
@@ -36,15 +37,13 @@ export const signUpEmployee = async (
     throw new Error('User limit reached for this organization');
   }
 
-  // 2. Signup using Supabase Auth
+  // 2. Signup Auth User
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
         name,
-        role: 'EMPLOYEE',
-        tenant_id: tenantId,
       },
     },
   });
@@ -54,37 +53,46 @@ export const signUpEmployee = async (
   }
 
   const userId = authData.user?.id;
+
   if (!userId) {
-    throw new Error('User creation failed.');
+    throw new Error('User creation failed');
   }
 
   // 3. Insert into users table
-  const { error: dbError } = await supabase.from('users').insert({
-    id: userId,
-    email,
-    name,
-    role: 'EMPLOYEE',
-    tenant_id: tenantId,
-  });
+  const { error: dbError } = await supabase
+    .from('users')
+    .insert({
+      id: userId,
+      email,
+      name,
+      role: 'EMPLOYEE',
+      tenant_id: tenantId,
+    });
 
   if (dbError) {
-    // Note: We might want to handle rollback of auth user here in production
-    throw new Error(`Failed to create user profile: ${dbError.message}`);
+    throw new Error(`Failed to create profile: ${dbError.message}`);
   }
 
-  // 4. Update tenant current_users
-  // NOTE: In production, ideally this should be a DB Trigger or RPC function to avoid RC.
-  const { error: updateError } = await supabase
-    .from('tenants')
-    .update({ current_users: tenant.current_users + 1 })
-    .eq('id', tenantId);
+  /**
+   * IMPORTANT:
+   * Trigger automatically increments current_users
+   * DO NOT update tenants table here anymore
+   */
 
-  if (updateError) {
-    console.error('Failed to increment tenant users:', updateError);
-    // Continuing because the user is already created, but we log the error.
+  // 4. Refresh JWT
+  await supabase.auth.signOut();
+
+  const { data: refreshedSession, error: reloginError } =
+    await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+  if (reloginError) {
+    throw new Error(reloginError.message);
   }
 
-  return authData;
+  return refreshedSession;
 };
 
 export const signInUser = async (email: string, password: string) => {

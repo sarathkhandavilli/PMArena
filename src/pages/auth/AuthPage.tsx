@@ -36,6 +36,7 @@ export default function AuthPage() {
 
   const navigate = useNavigate();
   const { user, profile, loading: authLoading, isFetchingProfile } = useAuth();
+  console.log("this is profile", profile)
 
   // Redirect if already logged in
   useEffect(() => {
@@ -87,12 +88,29 @@ export default function AuthPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regTenantId) { toast.error('Please select an organization.'); return; }
+
+    if (!regTenantId) {
+      toast.error('Please select an organization.');
+      return;
+    }
+
     setIsRegistering(true);
+
     try {
-      await signUpEmployee(regEmail, regPassword, regName, regTenantId);
+      const data = await signUpEmployee(
+        regEmail,
+        regPassword,
+        regName,
+        regTenantId
+      );
+
+      if (!data.user) {
+        throw new Error('Signup failed');
+      }
+
       toast.success('Account created successfully!');
-      navigate('/dashboard');
+
+      // AuthContext will auto redirect
     } catch (error: any) {
       toast.error(error.message || 'Signup failed');
     } finally {

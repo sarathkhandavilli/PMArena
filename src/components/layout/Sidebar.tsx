@@ -7,7 +7,8 @@ import {
   LayoutDashboard, Building2, Users, LogOut,
   ChevronLeft, ChevronRight, Zap, BookOpen,
   Upload, Menu, X, LayoutGrid,
-  Sparkles, User, Settings, HelpCircle, ChevronsUpDown, Palette
+  Sparkles, User, Settings, HelpCircle, ChevronsUpDown, Palette,
+  Trophy, LineChart, FileCheck
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -35,6 +36,13 @@ const ADMIN_NAV: NavItem[] = [
   { label: 'Imports', href: '/admin/imports', icon: <Upload size={18} /> },
 ];
 
+const EMPLOYEE_NAV: NavItem[] = [
+  { label: 'Overview', href: '/dashboard', icon: <LayoutDashboard size={18} /> },
+  { label: 'Problems Solved', href: '/dashboard/submissions', icon: <FileCheck size={18} /> },
+  { label: 'Leaderboard', href: '/dashboard/leaderboard', icon: <Trophy size={18} /> },
+  { label: 'My Performance', href: '/dashboard/performance', icon: <LineChart size={18} /> },
+];
+
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -42,7 +50,10 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const navItems = profile?.role === 'SUPER_ADMIN' ? SUPER_ADMIN_NAV : ADMIN_NAV;
+  const navItems = 
+    profile?.role === 'SUPER_ADMIN' ? SUPER_ADMIN_NAV : 
+    profile?.role === 'ADMIN' ? ADMIN_NAV : 
+    EMPLOYEE_NAV;
 
   const handleLogout = async () => {
     try {
@@ -54,7 +65,7 @@ export default function Sidebar() {
   };
 
   const isActive = (href: string) => {
-    if (href === '/super-admin' || href === '/admin') {
+    if (href === '/super-admin' || href === '/admin' || href === '/dashboard') {
       return location.pathname === href;
     }
     return location.pathname.startsWith(href);

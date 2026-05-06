@@ -23,7 +23,10 @@ import TenantsPage from "./pages/superadmin/Tenants";
 import AdminsPage from "./pages/superadmin/Admins";
 
 // Employee
-import EmployeeDashboard from "./pages/employee/Dashboard";
+import EmployeeDashboard from "./pages/employee/Dashboard.tsx";
+import EmployeeSubmissions from "./pages/employee/Submissions.tsx";
+import EmployeeLeaderboard from "./pages/employee/Leaderboard.tsx";
+import EmployeePerformance from "./pages/employee/Performance.tsx";
 
 const queryClient = new QueryClient();
 
@@ -43,7 +46,12 @@ const App = () => (
 
             {/* Employee */}
             <Route element={<EmployeeRoute />}>
-              <Route path="/dashboard" element={<EmployeeDashboard />} />
+              <Route element={<AppShell />}>
+                <Route path="/dashboard" element={<EmployeeDashboard />} />
+                <Route path="/dashboard/submissions" element={<EmployeeSubmissions />} />
+                <Route path="/dashboard/leaderboard" element={<EmployeeLeaderboard />} />
+                <Route path="/dashboard/performance" element={<EmployeePerformance />} />
+              </Route>
             </Route>
 
             {/* Admin – wrapped in AppShell */}
