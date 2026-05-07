@@ -8,6 +8,7 @@ import {
   Mail, Lock, Eye, EyeOff, User, Building2,
   Sparkles, Target, Zap, ArrowRight, AlertCircle,
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Tenant {
   id: string;
@@ -120,6 +121,35 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex w-full" style={{ fontFamily: 'Inter, sans-serif' }}>
+      <style>{`
+        .auth-select-trigger:focus, .auth-select-trigger[data-state="open"] {
+          box-shadow: none !important;
+          outline: none !important;
+          border-color: #E5E7EB !important;
+          ring: 0 !important;
+        }
+        .auth-select-trigger svg, .auth-select-content svg {
+          color: #111827 !important;
+          opacity: 1 !important;
+        }
+        .auth-select-item {
+          background-color: transparent !important;
+          color: #111827 !important;
+          transition: background-color 0.2s ease;
+        }
+        .auth-select-item:hover {
+          background-color: #F3F4F6 !important;
+        }
+        .auth-select-item[data-highlighted] {
+          /* Prevent radix default highlighted background */
+          background-color: transparent !important;
+          color: #111827 !important;
+        }
+        .auth-select-item[data-highlighted]:hover {
+          /* Apply hover background even when highlighted */
+          background-color: #F3F4F6 !important;
+        }
+      `}</style>
 
       {/* ── LEFT PANEL: Deep Navy Branding ── */}
       <div
@@ -372,19 +402,30 @@ export default function AuthPage() {
                 <label className="text-sm font-medium text-gray-700">Organization</label>
                 <div className="relative">
                   <Building2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10" />
-                  <select
+                  <Select
                     required
                     disabled={fetchingTenants}
                     value={regTenantId}
-                    onChange={(e) => setRegTenantId(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-900 bg-white outline-none appearance-none cursor-pointer disabled:opacity-60"
-                    style={{ borderColor: '#E5E7EB' }}
+                    onValueChange={(val) => setRegTenantId(val)}
                   >
-                    <option value="">{fetchingTenants ? 'Loading...' : 'Search organization...'}</option>
-                    {tenants.map((t) => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
-                    ))}
-                  </select>
+                    <SelectTrigger
+                      className="auth-select-trigger w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-900 bg-white outline-none h-[42px]"
+                      style={{ borderColor: '#E5E7EB' }}
+                    >
+                      <SelectValue placeholder={fetchingTenants ? 'Loading...' : 'Search organization...'} />
+                    </SelectTrigger>
+                    <SelectContent className="auth-select-content bg-white border border-gray-200 shadow-sm rounded-lg max-h-[200px]">
+                      {tenants.map((t) => (
+                        <SelectItem
+                          key={t.id}
+                          value={t.id}
+                          className="auth-select-item cursor-pointer pl-8 py-2 text-sm"
+                        >
+                          {t.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
