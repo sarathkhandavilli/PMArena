@@ -14,40 +14,38 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Set Firebase project dynamically
-      - name: Set Firebase environment
-        run: |
-          BRANCH="${GITHUB_REF##*/}"
-
-          echo "Branch: $BRANCH"
-
-          if [[ "$BRANCH" == "development" ]]; then
-            echo "FIREBASE_PROJECT=pmarena-dev" >> $GITHUB_ENV
-            echo "FIREBASE_SERVICE_ACCOUNT=${{ secrets.FIREBASE_SERVICE_ACCOUNT_PMARENA_DEV }}" >> $GITHUB_ENV
-
-          elif [[ "$BRANCH" == "staging" ]]; then
-            echo "FIREBASE_PROJECT=pmarena-staging" >> $GITHUB_ENV
-            echo "FIREBASE_SERVICE_ACCOUNT=${{ secrets.FIREBASE_SERVICE_ACCOUNT_PMARENA_STAGING }}" >> $GITHUB_ENV
-
-          elif [[ "$BRANCH" == "main" ]]; then
-            echo "FIREBASE_PROJECT=pmarena-prod" >> $GITHUB_ENV
-            echo "FIREBASE_SERVICE_ACCOUNT=${{ secrets.FIREBASE_SERVICE_ACCOUNT_PMARENA_PROD }}" >> $GITHUB_ENV
-
-          else
-            echo "Unknown branch"
-            exit 1
-          fi
-
       # Build app
       - run: npm ci && npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      # Deploy to Firebase
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      # Deploy — Development
+      - name: Deploy to Development
+        if: github.ref == 'refs/heads/development'
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ env.FIREBASE_SERVICE_ACCOUNT }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PMARENA_DEV }}
           channelId: live
-          projectId: ${{ env.FIREBASE_PROJECT }}
+          projectId: pmarena-dev
+
+      # Deploy — Staging
+      - name: Deploy to Staging
+        if: github.ref == 'refs/heads/staging'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PMARENA_STAGING }}
+          channelId: live
+          projectId: pmarena-test
+
+      # Deploy — Production
+      - name: Deploy to Production
+        if: github.ref == 'refs/heads/main'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PMARENA_PROD }}
+          channelId: live
+          projectId: thepmarena

@@ -20,39 +20,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Detect target branch
-      - name: Set Firebase environment
-        run: |
-          TARGET_BRANCH="${{ github.base_ref }}"
-
-          echo "Target branch: $TARGET_BRANCH"
-
-          if [[ "$TARGET_BRANCH" == "development" ]]; then
-            echo "FIREBASE_PROJECT=pmarena-dev" >> $GITHUB_ENV
-            echo "FIREBASE_SERVICE_ACCOUNT=${{ secrets.FIREBASE_SERVICE_ACCOUNT_PMARENA_DEV }}" >> $GITHUB_ENV
-
-          elif [[ "$TARGET_BRANCH" == "staging" ]]; then
-            echo "FIREBASE_PROJECT=pmarena-staging" >> $GITHUB_ENV
-            echo "FIREBASE_SERVICE_ACCOUNT=${{ secrets.FIREBASE_SERVICE_ACCOUNT_PMARENA_STAGING }}" >> $GITHUB_ENV
-
-          elif [[ "$TARGET_BRANCH" == "main" ]]; then
-            echo "FIREBASE_PROJECT=pmarena-prod" >> $GITHUB_ENV
-            echo "FIREBASE_SERVICE_ACCOUNT=${{ secrets.FIREBASE_SERVICE_ACCOUNT_PMARENA_PROD }}" >> $GITHUB_ENV
-
-          else
-            echo "Unsupported branch"
-            exit 1
-          fi
-
       # Build app
       - run: npm ci && npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      # Deploy preview
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      # Preview — Development
+      - name: Preview for Development PR
+        if: github.base_ref == 'development'
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ env.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: ${{ env.FIREBASE_PROJECT }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PMARENA_DEV }}
+          projectId: pmarena-dev
+
+      # Preview — Staging
+      - name: Preview for Staging PR
+        if: github.base_ref == 'staging'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PMARENA_STAGING }}
+          projectId: pmarena-test
+
+      # Preview — Production
+      - name: Preview for Main PR
+        if: github.base_ref == 'main'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PMARENA_PROD }}
+          projectId: thepmarena
