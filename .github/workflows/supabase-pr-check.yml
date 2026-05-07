@@ -1,14 +1,13 @@
-name: Supabase Deploy
+name: Supabase PR Validation
 
 on:
-  push:
+  pull_request:
     branches:
-      - development
       - staging
       - main
 
 jobs:
-  deploy:
+  validate:
     runs-on: ubuntu-latest
 
     env:
@@ -23,40 +22,31 @@ jobs:
         with:
           version: latest
 
-      # Set environment dynamically
+      # Detect target branch
       - name: Set environment variables
         run: |
-          BRANCH="${GITHUB_REF##*/}"
+          TARGET_BRANCH="${{ github.base_ref }}"
 
-          echo "Running on branch: $BRANCH"
+          echo "Target branch: $TARGET_BRANCH"
 
-          if [[ "$BRANCH" == "development" ]]; then
-            echo "PROJECT_REF=${{ secrets.SUPABASE_DEV_PROJECT_REF }}" >> $GITHUB_ENV
-            echo "DB_PASSWORD=${{ secrets.SUPABASE_DEV_DB_PASSWORD }}" >> $GITHUB_ENV
-
-          elif [[ "$BRANCH" == "staging" ]]; then
+          if [[ "$TARGET_BRANCH" == "staging" ]]; then
             echo "PROJECT_REF=${{ secrets.SUPABASE_STAGING_PROJECT_REF }}" >> $GITHUB_ENV
             echo "DB_PASSWORD=${{ secrets.SUPABASE_STAGING_DB_PASSWORD }}" >> $GITHUB_ENV
 
-          elif [[ "$BRANCH" == "main" ]]; then
+          elif [[ "$TARGET_BRANCH" == "main" ]]; then
             echo "PROJECT_REF=${{ secrets.SUPABASE_PROD_PROJECT_REF }}" >> $GITHUB_ENV
             echo "DB_PASSWORD=${{ secrets.SUPABASE_PROD_DB_PASSWORD }}" >> $GITHUB_ENV
 
           else
-            echo "Unknown branch"
+            echo "Unsupported branch"
             exit 1
           fi
 
       - name: Link Supabase project
         run: supabase link --project-ref $PROJECT_REF --password $DB_PASSWORD
 
-      - name: Push database changes
-        run: supabase db push
+      - name: Validate database migrations
+        run: supabase db lint
 
-      - name: Deploy functions
-        run: |
-          if [ -d "supabase/functions" ] && [ "$(ls -A supabase/functions)" ]; then
-            supabase functions deploy --no-verify-jwt
-          else
-            echo "No functions found. Skipping deployment."
-          fi
+      - name: Check migration status
+        run: supabase migration list
