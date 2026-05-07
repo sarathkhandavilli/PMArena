@@ -4,6 +4,7 @@ import { Target, TrendingUp, Award, Calendar } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { PerformanceSkeleton } from '@/components/ui/PageLoading';
 
 export default function EmployeePerformance() {
   const { profile } = useAuth();
@@ -67,6 +68,10 @@ export default function EmployeePerformance() {
 
     fetchPerformance();
   }, [profile?.id]);
+
+  if (loading) {
+    return <PerformanceSkeleton />;
+  }
 
   return (
     <div className="space-y-8 animate-fade-in pb-10">

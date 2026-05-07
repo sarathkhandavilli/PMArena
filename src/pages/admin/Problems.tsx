@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import DataTable from '@/components/ui/DataTable';
 import { Search, Filter } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TableSkeleton } from '@/components/ui/PageLoading';
 
 interface Problem {
   id: string;
@@ -82,8 +83,12 @@ export default function ProblemsPage() {
     { key: 'department', label: 'Dept', render: (row: Problem) => <span className="text-white/50 text-xs">{row.department || '—'}</span> },
   ];
 
+  if (loading) {
+    return <TableSkeleton />;
+  }
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in w-full">
       <div>
         <h2 className="text-white font-semibold text-lg">Problems</h2>
         <p className="text-white/40 text-xs mt-0.5">{filtered.length} problems found</p>

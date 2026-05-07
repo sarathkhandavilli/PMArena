@@ -5,6 +5,7 @@ import { BookOpen, Trophy, Target, Sparkles, Clock, ArrowRight } from 'lucide-re
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { generateSlug } from '../ProblemPage';
+import { DashboardSkeleton } from '@/components/ui/PageLoading';
 
 export default function Dashboard() {
   const { profile } = useAuth();
@@ -98,7 +99,7 @@ export default function Dashboard() {
   };
 
   if (loading) {
-    return <div className="p-8 text-white/50 animate-pulse">Loading dashboard...</div>;
+    return <DashboardSkeleton />;
   }
 
   return (

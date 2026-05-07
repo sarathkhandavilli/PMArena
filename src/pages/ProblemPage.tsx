@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import ProblemDetail from "@/components/ProblemDetail";
 import { supabase } from "@/lib/supabase";
 import { dbToLegacy, DbProblem } from "./Index";
+import { InnerProblemPageSkeleton } from "@/components/ui/PageLoading";
 
 export const generateSlug = (title: string) => 
   title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -38,9 +39,7 @@ const ProblemPage = () => {
     return (
       <div className="h-screen flex flex-col bg-background">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
+        <InnerProblemPageSkeleton />
       </div>
     );
   }

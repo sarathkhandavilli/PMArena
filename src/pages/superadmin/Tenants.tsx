@@ -4,6 +4,7 @@ import DataTable from '@/components/ui/DataTable';
 import Modal from '@/components/ui/Modal';
 import { Plus, Building2, ToggleLeft, ToggleRight, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
+import { TableSkeleton } from '@/components/ui/PageLoading';
 
 interface Tenant {
   id: string;
@@ -127,8 +128,12 @@ export default function TenantsPage() {
     )},
   ];
 
+  if (loading) {
+    return <TableSkeleton />;
+  }
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in w-full">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

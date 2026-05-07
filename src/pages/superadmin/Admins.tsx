@@ -4,6 +4,7 @@ import DataTable from '@/components/ui/DataTable';
 import Modal from '@/components/ui/Modal';
 import { Plus, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
+import { TableSkeleton } from '@/components/ui/PageLoading';
 
 interface Admin {
   id: string;
@@ -113,8 +114,12 @@ export default function AdminsPage() {
     { key: 'created_at', label: 'Joined', render: (row: Admin) => <span className="text-white/40 text-xs">{new Date(row.created_at).toLocaleDateString()}</span> },
   ];
 
+  if (loading) {
+    return <TableSkeleton />;
+  }
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in w-full">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-white font-semibold text-lg">Admins</h2>

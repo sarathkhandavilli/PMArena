@@ -174,12 +174,30 @@ const Index = () => {
         {/* Problem Table */}
         <div className="flex-1 overflow-y-auto">
           {loading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                <p className="text-sm text-muted-foreground">Loading problems...</p>
-              </div>
-            </div>
+            <table className="w-full">
+              <thead className="sticky top-0 z-10 bg-card border-b border-border">
+                <tr className="text-xs text-muted-foreground uppercase tracking-wider">
+                  <th className="text-left font-medium px-6 py-3 w-10">#</th>
+                  <th className="text-left font-medium px-3 py-3">Title</th>
+                  <th className="text-left font-medium px-3 py-3 w-36">Company</th>
+                  <th className="text-left font-medium px-3 py-3 w-36">Industry</th>
+                  <th className="text-left font-medium px-3 py-3 w-40">Signal</th>
+                  <th className="text-left font-medium px-3 py-3 w-24">Difficulty</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <tr key={i} className="border-b border-border/50 animate-pulse">
+                    <td className="px-6 py-3"><div className="h-4 w-4 bg-muted rounded" /></td>
+                    <td className="px-3 py-3"><div className="h-4 w-64 bg-muted rounded" /></td>
+                    <td className="px-3 py-3"><div className="h-4 w-24 bg-muted rounded" /></td>
+                    <td className="px-3 py-3"><div className="h-4 w-24 bg-muted rounded" /></td>
+                    <td className="px-3 py-3"><div className="h-5 w-20 bg-muted rounded-md" /></td>
+                    <td className="px-3 py-3"><div className="h-4 w-12 bg-muted rounded" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           ) : filtered.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <p className="text-sm text-muted-foreground">

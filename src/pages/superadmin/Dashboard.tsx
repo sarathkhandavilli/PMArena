@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import StatCard from '@/components/ui/StatCard';
 import DataTable from '@/components/ui/DataTable';
 import { Building2, Users, CheckCircle, ShieldCheck } from 'lucide-react';
+import { DashboardSkeleton } from '@/components/ui/PageLoading';
 
 interface Tenant {
   id: string;
@@ -61,8 +62,12 @@ export default function SuperAdminHome() {
     )},
   ];
 
+  if (loading) {
+    return <DashboardSkeleton />;
+  }
+
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in w-full">
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

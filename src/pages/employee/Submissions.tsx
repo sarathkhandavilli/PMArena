@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { ChevronDown, ChevronUp, Clock, CheckCircle2, Building2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { generateSlug } from '../ProblemPage';
+import { SubmissionsSkeleton } from '@/components/ui/PageLoading';
 
 export default function EmployeeSubmissions() {
   const { profile } = useAuth();
@@ -47,7 +48,7 @@ export default function EmployeeSubmissions() {
   };
 
   if (loading) {
-    return <div className="p-8 text-white/50 animate-pulse text-center">Loading submissions...</div>;
+    return <SubmissionsSkeleton />;
   }
 
   return (

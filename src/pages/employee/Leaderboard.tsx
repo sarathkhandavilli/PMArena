@@ -71,9 +71,21 @@ export default function EmployeeLeaderboard() {
           </thead>
           <tbody className="divide-y divide-white/5">
             {loading ? (
-              <tr>
-                <td colSpan={3} className="py-12 text-center text-white/50 animate-pulse">Loading global rankings...</td>
-              </tr>
+              [1, 2, 3, 4, 5].map((i) => (
+                <tr key={i} className="animate-pulse">
+                  <td className="py-4 px-6 align-middle text-center"><div className="h-6 w-6 mx-auto bg-white/5 rounded-md" /></td>
+                  <td className="py-4 px-6 align-middle">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-white/5 shrink-0" />
+                      <div className="space-y-2">
+                        <div className="h-4 w-32 bg-white/5 rounded" />
+                        <div className="h-3 w-20 bg-white/5 rounded" />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 px-6 align-middle text-right"><div className="h-6 w-16 ml-auto bg-white/5 rounded" /></td>
+                </tr>
+              ))
             ) : leaderboard.length === 0 ? (
               <tr>
                 <td colSpan={3} className="py-12 text-center text-white/50">No scores recorded yet.</td>

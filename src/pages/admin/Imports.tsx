@@ -5,6 +5,7 @@ import DataTable from '@/components/ui/DataTable';
 import { Upload, CloudUpload, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import { TableSkeleton } from '@/components/ui/PageLoading';
 
 interface ImportLog {
   id: string;
@@ -138,8 +139,12 @@ export default function ImportsPage() {
     },
   ];
 
+  if (loading) {
+    return <TableSkeleton />;
+  }
+
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in w-full">
       <div>
         <h2 className="text-white font-semibold text-lg">Import Data</h2>
         <p className="text-white/40 text-xs mt-0.5">Upload Excel files to bulk-import PM problems</p>

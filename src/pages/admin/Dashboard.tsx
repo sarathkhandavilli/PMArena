@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import StatCard from '@/components/ui/StatCard';
 import { BookOpen, Upload, Users, CheckCircle } from 'lucide-react';
+import { DashboardSkeleton } from '@/components/ui/PageLoading';
 
 export default function AdminHome() {
   const [stats, setStats] = useState({ problems: 0, imports: 0, users: 0 });
@@ -28,8 +29,12 @@ export default function AdminHome() {
     fetchStats();
   }, []);
 
+  if (loading) {
+    return <DashboardSkeleton />;
+  }
+
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in w-full">
       <div>
         <h2 className="text-white font-semibold text-lg mb-1">Welcome back 👋</h2>
         <p className="text-white/40 text-sm">Here's what's happening on PM Arena today.</p>
