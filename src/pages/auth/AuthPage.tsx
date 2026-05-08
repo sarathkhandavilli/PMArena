@@ -16,7 +16,7 @@ interface Tenant {
 }
 
 export default function AuthPage() {
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot-password' | 'update-password'>('login');
 
   // Login State
   const [loginEmail, setLoginEmail] = useState('');
@@ -35,14 +35,39 @@ export default function AuthPage() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [fetchingTenants, setFetchingTenants] = useState(true);
 
+  // Password Reset State
+  const [resetEmail, setResetEmail] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [isRecovering, setIsRecovering] = useState(false);
+
   const navigate = useNavigate();
   const { user, profile, loading: authLoading, isFetchingProfile } = useAuth();
   console.log("this is profile", profile)
 
+  // Listen for password recovery
+  useEffect(() => {
+    // Check if URL has recovery hash
+    if (window.location.hash.includes('type=recovery')) {
+      setIsRecovering(true);
+      setActiveTab('update-password');
+    }
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsRecovering(true);
+        setActiveTab('update-password');
+      }
+    });
+
+    return () => authListener.subscription.unsubscribe();
+  }, []);
+
   // Redirect if already logged in
   useEffect(() => {
     // If it's performing the initial session load or fetching a profile, wait.
-    if (authLoading || isFetchingProfile) return;
+    if (authLoading || isFetchingProfile || isRecovering) return;
 
     if (user && profile) {
       if (profile.role === 'SUPER_ADMIN') navigate('/super-admin');
@@ -116,6 +141,39 @@ export default function AuthPage() {
       toast.error(error.message || 'Signup failed');
     } finally {
       setIsRegistering(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsResetting(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: window.location.origin + '/auth?type=recovery',
+      });
+      if (error) throw error;
+      toast.success('Password reset link sent! Check your email.');
+      setActiveTab('login');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send reset link');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdatingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success('Password updated successfully! You can now log in.');
+      setIsRecovering(false);
+      setActiveTab('login');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update password');
+    } finally {
+      setIsUpdatingPassword(false);
     }
   };
 
@@ -222,21 +280,23 @@ export default function AuthPage() {
         <div className="w-full max-w-[400px]">
 
           {/* ── TABS ── */}
-          <div className="flex border-b border-gray-200 mb-8">
-            {(['login', 'register'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className="flex-1 pb-3 text-sm font-semibold capitalize transition-all"
-                style={{
-                  color: activeTab === tab ? '#111827' : '#9CA3AF',
-                  borderBottom: activeTab === tab ? '2px solid #00C29A' : '2px solid transparent',
-                }}
-              >
-                {tab === 'login' ? 'Login' : 'Register'}
-              </button>
-            ))}
-          </div>
+          {!isRecovering && activeTab !== 'forgot-password' && activeTab !== 'update-password' && (
+            <div className="flex border-b border-gray-200 mb-8">
+              {(['login', 'register'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className="flex-1 pb-3 text-sm font-semibold capitalize transition-all"
+                  style={{
+                    color: activeTab === tab ? '#111827' : '#9CA3AF',
+                    borderBottom: activeTab === tab ? '2px solid #00C29A' : '2px solid transparent',
+                  }}
+                >
+                  {tab === 'login' ? 'Login' : 'Register'}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* ── LOGIN FORM ── */}
           {activeTab === 'login' && (
@@ -297,9 +357,14 @@ export default function AuthPage() {
                   />
                   <span className="text-sm text-gray-600">Remember me</span>
                 </label>
-                <a href="#" className="text-sm font-medium" style={{ color: '#00C29A' }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('forgot-password')}
+                  className="text-sm font-medium transition-colors hover:opacity-80"
+                  style={{ color: '#00C29A' }}
+                >
                   Forgot password?
-                </a>
+                </button>
               </div>
 
               {/* Sign in button */}
@@ -445,6 +510,91 @@ export default function AuthPage() {
               <p className="text-center text-xs text-gray-400 pt-2">
                 By continuing, you agree to our Terms of Service and Privacy Policy
               </p>
+            </form>
+          )}
+
+          {/* ── FORGOT PASSWORD FORM ── */}
+          {activeTab === 'forgot-password' && (
+            <form onSubmit={handleResetPassword} className="space-y-5">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Reset Password</h3>
+                <p className="text-sm text-gray-500">Enter your email and we'll send you a reset link.</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700">Email address</label>
+                <div className="relative">
+                  <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="email"
+                    placeholder="you@company.com"
+                    required
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border text-sm text-gray-900 placeholder-gray-400 outline-none transition-all"
+                    style={{
+                      borderColor: resetEmail ? '#00C29A' : '#E5E7EB',
+                      boxShadow: resetEmail ? '0 0 0 3px rgba(0,194,154,0.1)' : 'none',
+                    }}
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isResetting}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-70"
+                style={{ background: 'linear-gradient(90deg, #2563EB 0%, #00C29A 100%)' }}
+              >
+                {isResetting ? 'Sending link...' : 'Send Reset Link'}
+              </button>
+
+              <p className="text-center text-sm text-gray-500 mt-4">
+                Remembered your password?{' '}
+                <button type="button" onClick={() => setActiveTab('login')} className="font-semibold transition-colors hover:opacity-80" style={{ color: '#00C29A' }}>Back to login</button>
+              </p>
+            </form>
+          )}
+
+          {/* ── UPDATE PASSWORD FORM ── */}
+          {activeTab === 'update-password' && (
+            <form onSubmit={handleUpdatePassword} className="space-y-5">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Update Password</h3>
+                <p className="text-sm text-gray-500">Please enter your new password.</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700">New Password</label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type={showLoginPassword ? 'text' : 'password'}
+                    placeholder="Enter new password"
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full pl-10 pr-10 py-2.5 rounded-lg border text-sm text-gray-900 placeholder-gray-400 outline-none transition-all"
+                    style={{ borderColor: '#E5E7EB' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showLoginPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isUpdatingPassword}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-70"
+                style={{ background: 'linear-gradient(90deg, #2563EB 0%, #00C29A 100%)' }}
+              >
+                {isUpdatingPassword ? 'Updating...' : 'Update Password'}
+              </button>
             </form>
           )}
 

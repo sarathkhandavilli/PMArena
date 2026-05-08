@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import DataTable from '@/components/ui/DataTable';
 import Modal from '@/components/ui/Modal';
 import { Plus, UserPlus } from 'lucide-react';
@@ -44,23 +45,37 @@ export default function AdminsPage() {
     }
     setSaving(true);
     try {
+      // Use a temporary client that doesn't persist the session
+      // This avoids logging out the current super admin
+      const tempClient = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_ANON_KEY,
+        { auth: { persistSession: false, autoRefreshToken: false } }
+      );
+
       // Create auth user
-      const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
+      const { data: authData, error: authErr } = await tempClient.auth.signUp({
         email: form.email,
         password: form.password,
-        email_confirm: true,
-        user_metadata: { name: form.name, role: 'ADMIN' },
+        options: {
+          data: { name: form.name, role: 'ADMIN' },
+        },
       });
       if (authErr) throw authErr;
+      if (!authData.user) throw new Error('User creation failed');
 
-      // Insert into users table
-      const { error: dbErr } = await supabase.from('users').insert({
+      // Insert into users table using the temp client (which is now signed in as the new admin)
+      const { error: dbErr } = await tempClient.from('users').insert({
         id: authData.user.id,
         email: form.email,
         name: form.name,
         role: 'ADMIN',
         tenant_id: null,
       });
+      
+      // Sign out the temp client
+      await tempClient.auth.signOut();
+      
       if (dbErr) throw dbErr;
 
       toast.success('Admin created');
