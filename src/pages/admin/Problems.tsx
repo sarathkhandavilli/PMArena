@@ -13,6 +13,7 @@ interface Problem {
   severity: number;
   department: string;
   industry: string;
+  sub_industry: string;
 }
 
 const BADGE = (label: string, color: string) => (
@@ -42,9 +43,11 @@ export default function ProblemsPage() {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState({ industry: '', company: '', signal: '', difficulty: '' });
+  const [filters, setFilters] = useState({ industry: '', sub_industry: '', company: '', department: '', signal: '', difficulty: '' });
   const [industries, setIndustries] = useState<string[]>([]);
+  const [subIndustries, setSubIndustries] = useState<string[]>([]);
   const [companies, setCompanies] = useState<string[]>([]);
+  const [departments, setDepartments] = useState<string[]>([]);
   const [signals, setSignals] = useState<string[]>([]);
 
   useEffect(() => {
@@ -54,7 +57,9 @@ export default function ProblemsPage() {
       const rows = data ?? [];
       setProblems(rows);
       setIndustries([...new Set(rows.map(r => r.industry).filter(Boolean))]);
+      setSubIndustries([...new Set(rows.map(r => r.sub_industry).filter(Boolean))]);
       setCompanies([...new Set(rows.map(r => r.company).filter(Boolean))]);
+      setDepartments([...new Set(rows.map(r => r.department).filter(Boolean))]);
       setSignals([...new Set(rows.map(r => r.signal).filter(Boolean))]);
       setLoading(false);
     };
@@ -65,10 +70,12 @@ export default function ProblemsPage() {
     const q = search.toLowerCase();
     const matchSearch = !q || p.title?.toLowerCase().includes(q) || p.company?.toLowerCase().includes(q);
     const matchIndustry = !filters.industry || p.industry === filters.industry;
+    const matchSubIndustry = !filters.sub_industry || p.sub_industry === filters.sub_industry;
     const matchCompany = !filters.company || p.company === filters.company;
+    const matchDepartment = !filters.department || p.department === filters.department;
     const matchSignal = !filters.signal || p.signal === filters.signal;
     const matchDifficulty = !filters.difficulty || filters.difficulty === "all" || getDifficultyLabel(p.severity) === filters.difficulty;
-    return matchSearch && matchIndustry && matchCompany && matchSignal && matchDifficulty;
+    return matchSearch && matchIndustry && matchSubIndustry && matchCompany && matchDepartment && matchSignal && matchDifficulty;
   });
 
   const columns = [
@@ -112,7 +119,9 @@ export default function ProblemsPage() {
 
         {[
           { label: 'Industry', key: 'industry', options: industries },
+          { label: 'Sub-Industry', key: 'sub_industry', options: subIndustries },
           { label: 'Company', key: 'company', options: companies },
+          { label: 'Department', key: 'department', options: departments },
           { label: 'Signal', key: 'signal', options: signals },
           { label: 'Difficulty', key: 'difficulty', options: ['Easy', 'Medium', 'Hard'] },
         ].map(f => (
@@ -133,7 +142,7 @@ export default function ProblemsPage() {
 
         {Object.values(filters).some(Boolean) && (
           <button
-            onClick={() => setFilters({ industry: '', company: '', signal: '', difficulty: '' })}
+            onClick={() => setFilters({ industry: '', sub_industry: '', company: '', department: '', signal: '', difficulty: '' })}
             className="text-xs px-3 py-2 rounded-lg"
             style={{ background: 'rgba(239,68,68,0.1)', color: '#F87171', border: '1px solid rgba(239,68,68,0.2)' }}
           >

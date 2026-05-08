@@ -67,6 +67,7 @@ export default function ImportsPage() {
         department: row['department'] || row['Department'] || '',
         industry: row['industry'] || row['Industry'] || '',
         sub_industry: row['sub_industry'] || row['SubIndustry'] || row['Sub Industry'] || '',
+        source: row['source'] || row['Source'] || '',
         user_comment: row['user_comment'] || row['UserComment'] || row['User Comment'] || '',
         problem_statement: row['problem_statement'] || row['ProblemStatement'] || row['Problem Statement'] || '',
       })).filter(p => p.title);
@@ -189,7 +190,7 @@ export default function ImportsPage() {
       {/* Format hint */}
       <div className="rounded-xl p-4" style={{ background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.15)' }}>
         <p className="text-blue-300 text-xs font-semibold mb-1">📋 Expected columns</p>
-        <p className="text-blue-300/60 text-xs font-mono">title, company, signal, severity, department, industry, sub_industry, user_comment, problem_statement</p>
+        <p className="text-blue-300/60 text-xs font-mono">title, company, signal, severity, department, source, industry, sub_industry, user_comment, problem_statement</p>
       </div>
 
       {/* History */}

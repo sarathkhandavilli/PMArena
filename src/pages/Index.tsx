@@ -16,6 +16,7 @@ export interface DbProblem {
   sub_industry: string;
   problem_statement: string;
   department: string;
+  source: string;
   user_comment: string;
 }
 
@@ -40,7 +41,7 @@ export function dbToLegacy(p: DbProblem) {
     subIndustry: p.sub_industry ?? "",
     problem_statement: p.problem_statement ?? "",
     user_comment: p.user_comment ?? "",
-    source: p.department ?? "",
+    source: p.source ?? "",
   };
 }
 
@@ -57,7 +58,9 @@ const Index = () => {
 
   // Filters
   const [industry, setIndustry] = useState("");
+  const [subIndustry, setSubIndustry] = useState("");
   const [company, setCompany] = useState("");
+  const [department, setDepartment] = useState("");
   const [signal, setSignal] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [search, setSearch] = useState("");
@@ -77,13 +80,17 @@ const Index = () => {
 
   // Dynamic filter options from DB data
   const industries = useMemo(() => [...new Set(problems.map(p => p.industry).filter(Boolean))].sort(), [problems]);
+  const subIndustries = useMemo(() => [...new Set(problems.filter(p => !industry || p.industry === industry).map(p => p.sub_industry).filter(Boolean))].sort(), [problems, industry]);
   const companies = useMemo(() => [...new Set(problems.map(p => p.company).filter(Boolean))].sort(), [problems]);
+  const departments = useMemo(() => [...new Set(problems.map(p => p.department).filter(Boolean))].sort(), [problems]);
   const signals = useMemo(() => [...new Set(problems.map(p => p.signal).filter(Boolean))].sort(), [problems]);
 
   const filtered = useMemo(() => {
     return problems.filter(p => {
       if (industry && p.industry !== industry) return false;
+      if (subIndustry && p.sub_industry !== subIndustry) return false;
       if (company && p.company !== company) return false;
+      if (department && p.department !== department) return false;
       if (signal && p.signal !== signal) return false;
       if (difficulty && difficulty !== "all" && getDifficultyLabel(p.severity) !== difficulty) return false;
       if (search) {
@@ -96,7 +103,7 @@ const Index = () => {
       }
       return true;
     });
-  }, [problems, industry, company, signal, difficulty, search]);
+  }, [problems, industry, subIndustry, company, department, signal, difficulty, search]);
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -105,7 +112,7 @@ const Index = () => {
 
         {/* Filter Bar */}
         <div className="border-b border-border bg-card/50 px-6 py-3">
-          <div className="flex items-center gap-2 overflow-x-auto">
+          <div className="flex flex-wrap items-center gap-2">
             <input
               type="text"
               value={search}
@@ -114,13 +121,23 @@ const Index = () => {
               className="h-8 w-56 px-3 rounded-md bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             />
 
-            <Select value={industry} onValueChange={(v) => setIndustry(v === "all" ? "" : v)}>
+            <Select value={industry} onValueChange={(v) => { setIndustry(v === "all" ? "" : v); setSubIndustry(""); }}>
               <SelectTrigger className="w-36 h-8 bg-muted border-border">
                 <SelectValue placeholder="Industry" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Industries</SelectItem>
                 {industries.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+              </SelectContent>
+            </Select>
+
+            <Select value={subIndustry} onValueChange={(v) => setSubIndustry(v === "all" ? "" : v)}>
+              <SelectTrigger className="w-36 h-8 bg-muted border-border">
+                <SelectValue placeholder="Sub-Industry" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sub-Industries</SelectItem>
+                {subIndustries.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
 
@@ -131,6 +148,16 @@ const Index = () => {
               <SelectContent>
                 <SelectItem value="all">All Companies</SelectItem>
                 {companies.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+
+            <Select value={department} onValueChange={(v) => setDepartment(v === "all" ? "" : v)}>
+              <SelectTrigger className="w-36 h-8 bg-muted border-border">
+                <SelectValue placeholder="Department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Departments</SelectItem>
+                {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
               </SelectContent>
             </Select>
 
@@ -156,9 +183,9 @@ const Index = () => {
               </SelectContent>
             </Select>
 
-            {(industry || company || signal || difficulty || search) && (
+            {(industry || subIndustry || company || department || signal || difficulty || search) && (
               <button
-                onClick={() => { setIndustry(""); setCompany(""); setSignal(""); setDifficulty(""); setSearch(""); }}
+                onClick={() => { setIndustry(""); setSubIndustry(""); setCompany(""); setDepartment(""); setSignal(""); setDifficulty(""); setSearch(""); }}
                 className="h-8 px-3 rounded-md text-xs text-muted-foreground hover:text-foreground border border-border hover:bg-muted transition-colors"
               >
                 Clear

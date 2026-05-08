@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Filter, ChevronDown, X } from "lucide-react";
-import { INDUSTRIES, SIGNALS, PROBLEMS, type Signal } from "@/data/problems";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/lib/supabase";
 
 interface FilterSidebarProps {
   onFilter: (filters: FilterState) => void;
@@ -12,31 +12,51 @@ export interface FilterState {
   industry: string;
   subIndustry: string;
   company: string;
-  signals: Signal[];
+  department: string;
+  signals: string[];
 }
-
-const companies = [...new Set(PROBLEMS.map((p) => p.company))].sort();
 
 const FilterSidebar = ({ onFilter, isLoading }: FilterSidebarProps) => {
   const [filters, setFilters] = useState<FilterState>({
     industry: "",
     subIndustry: "",
     company: "",
+    department: "",
     signals: [],
   });
   const [error, setError] = useState("");
+  const [filterData, setFilterData] = useState<any[]>([]);
 
-  const subIndustries = filters.industry ? INDUSTRIES[filters.industry] || [] : [];
+  useEffect(() => {
+    const fetchFilters = async () => {
+      const { data } = await supabase.from('problems').select('industry, sub_industry, company, signal');
+      if (data) {
+        setFilterData(data);
+      }
+    };
+    fetchFilters();
+  }, []);
+
+  const industries = useMemo(() => [...new Set(filterData.map(p => p.industry).filter(Boolean))].sort(), [filterData]);
+  const subIndustries = useMemo(() => {
+    if (!filters.industry) return [];
+    return [...new Set(filterData.filter(p => p.industry === filters.industry).map(p => p.sub_industry).filter(Boolean))].sort();
+  }, [filterData, filters.industry]);
+  const companies = useMemo(() => [...new Set(filterData.map(p => p.company).filter(Boolean))].sort(), [filterData]);
+  const departments = useMemo(() => [...new Set(filterData.map(p => p.department).filter(Boolean))].sort(), [filterData]);
+  const allSignals = useMemo(() => [...new Set(filterData.map(p => p.signal).filter(Boolean))].sort(), [filterData]);
+
+
 
   const hasActiveFilter =
-    filters.industry || filters.company || filters.signals.length > 0;
+    filters.industry || filters.subIndustry || filters.company || filters.department || filters.signals.length > 0;
 
   const handleIndustryChange = (value: string) => {
     setFilters((prev) => ({ ...prev, industry: value, subIndustry: "" }));
     setError("");
   };
 
-  const toggleSignal = (signal: Signal) => {
+  const toggleSignal = (signal: string) => {
     setFilters((prev) => ({
       ...prev,
       signals: prev.signals.includes(signal)
@@ -56,16 +76,20 @@ const FilterSidebar = ({ onFilter, isLoading }: FilterSidebarProps) => {
   };
 
   const clearFilters = () => {
-    setFilters({ industry: "", subIndustry: "", company: "", signals: [] });
+    setFilters({ industry: "", subIndustry: "", company: "", department: "", signals: [] });
     setError("");
   };
 
-  const signalColorMap: Record<Signal, string> = {
+  const signalColorMap: Record<string, string> = {
     "UX Friction": "bg-signal-ux/15 text-signal-ux border-signal-ux/30",
     "Dropoff": "bg-signal-dropoff/15 text-signal-dropoff border-signal-dropoff/30",
     "Performance Issues": "bg-signal-performance/15 text-signal-performance border-signal-performance/30",
     "Pricing Friction": "bg-signal-pricing/15 text-signal-pricing border-signal-pricing/30",
     "Trust Issues": "bg-signal-trust/15 text-signal-trust border-signal-trust/30",
+  };
+
+  const getSignalColor = (signal: string) => {
+    return signalColorMap[signal] || "bg-primary/15 text-primary border-primary/30";
   };
 
   return (
@@ -98,7 +122,7 @@ const FilterSidebar = ({ onFilter, isLoading }: FilterSidebarProps) => {
               className="w-full h-9 px-3 pr-8 rounded-md bg-muted border border-border text-sm text-foreground appearance-none focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
             >
               <option value="">All Industries</option>
-              {Object.keys(INDUSTRIES).map((ind) => (
+              {industries.map((ind) => (
                 <option key={ind} value={ind}>{ind}</option>
               ))}
             </select>
@@ -161,13 +185,36 @@ const FilterSidebar = ({ onFilter, isLoading }: FilterSidebarProps) => {
           </div>
         </div>
 
+        {/* Department */}
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Department
+          </label>
+          <div className="relative">
+            <select
+              value={filters.department}
+              onChange={(e) => {
+                setFilters((prev) => ({ ...prev, department: e.target.value }));
+                setError("");
+              }}
+              className="w-full h-9 px-3 pr-8 rounded-md bg-muted border border-border text-sm text-foreground appearance-none focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+            >
+              <option value="">All Departments</option>
+              {departments.map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+          </div>
+        </div>
+
         {/* Signals */}
         <div className="space-y-2">
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
             Signal
           </label>
           <div className="flex flex-wrap gap-1.5">
-            {SIGNALS.map((signal) => {
+            {allSignals.map((signal) => {
               const active = filters.signals.includes(signal);
               return (
                 <button
@@ -175,7 +222,7 @@ const FilterSidebar = ({ onFilter, isLoading }: FilterSidebarProps) => {
                   onClick={() => toggleSignal(signal)}
                   className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-all ${
                     active
-                      ? signalColorMap[signal]
+                      ? getSignalColor(signal)
                       : "bg-muted border-border text-muted-foreground hover:text-foreground"
                   }`}
                 >
