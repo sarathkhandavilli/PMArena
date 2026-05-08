@@ -46,10 +46,24 @@ export default function AuthPage() {
   const { user, profile, loading: authLoading, isFetchingProfile } = useAuth();
   console.log("this is profile", profile)
 
-  // Listen for password recovery
+  // Listen for password recovery or auth errors
   useEffect(() => {
-    // Check if URL has recovery hash
-    if (window.location.hash.includes('type=recovery')) {
+    // 1. Check for expired/invalid links from Supabase
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const queryParams = new URLSearchParams(window.location.search);
+    const errorDesc = hashParams.get('error_description') || queryParams.get('error_description');
+    
+    if (errorDesc) {
+      toast.error(errorDesc.replace(/\+/g, ' '));
+      // Force sign out to prevent dropping them into the dashboard unexpectedly
+      supabase.auth.signOut();
+      // Clean up the URL
+      window.history.replaceState(null, '', '/auth');
+      return;
+    }
+
+    // 2. Check if URL has valid recovery hash
+    if (window.location.hash.includes('type=recovery') || window.location.search.includes('type=recovery')) {
       setIsRecovering(true);
       setActiveTab('update-password');
     }
